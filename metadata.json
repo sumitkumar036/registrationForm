@@ -1,0 +1,6 @@
+{
+  "name": "Metro Marathon Registration & Survey",
+  "description": "On-page marathon runner registration and post-race survey portal with live validation and backend API persistence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
