@@ -1,5 +1,6 @@
 export interface PreMarathonFormData {
   name: string;
+  email: string;
   ageGroup: string;
   gender: string;
   isFirstMarathon: string;

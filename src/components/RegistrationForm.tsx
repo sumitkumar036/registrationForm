@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { PreMarathonFormData, PreMarathonRegistrationRecord } from '../types';
-import { CheckCircle2, AlertCircle, Send, Sparkles, User, Trophy, ArrowRight } from 'lucide-react';
+import { QRCodeDisplay } from './QRCodeDisplay';
+import { CheckCircle2, AlertCircle, Send, Sparkles, User, Mail, ArrowRight } from 'lucide-react';
 
 interface RegistrationFormProps {
   onSuccess: (record: PreMarathonRegistrationRecord) => void;
   onSwitchToSurvey: () => void;
+  onOpenVerification?: (bib: string) => void;
 }
 
 const AGE_GROUPS = ['Under 18', '18–25', '26–35', '36–45', '46–55', '56+'];
@@ -24,6 +26,7 @@ const CONFIDENCE_LEVELS = ['Very confident', 'Confident', 'Neutral', 'Slightly c
 
 const initialFormData: PreMarathonFormData = {
   name: '',
+  email: '',
   ageGroup: '',
   gender: '',
   isFirstMarathon: '',
@@ -37,7 +40,7 @@ const initialFormData: PreMarathonFormData = {
   expectations: '',
 };
 
-export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, onSwitchToSurvey }) => {
+export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, onSwitchToSurvey, onOpenVerification }) => {
   const [formData, setFormData] = useState<PreMarathonFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -49,53 +52,61 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
   const validate = (data: PreMarathonFormData): Record<string, string> => {
     const errs: Record<string, string> = {};
 
-    // 1. Name is optional, no required error
+    // 1. Name is optional, no error
 
-    // 2. Age group
+    // 2. Email Address (Required for sending confirmation email & QR pass)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!data.email || !data.email.trim()) {
+      errs.email = 'Please provide an email address to receive your official QR Code pass.';
+    } else if (!emailRegex.test(data.email.trim())) {
+      errs.email = 'Please enter a valid email address (e.g. runner@gmail.com).';
+    }
+
+    // 3. Age group
     if (!data.ageGroup) {
       errs.ageGroup = 'Please select your age group.';
     }
 
-    // 3. Gender
+    // 4. Gender
     if (!data.gender) {
       errs.gender = 'Please select your gender.';
     }
 
-    // 4. First marathon
+    // 5. First marathon
     if (!data.isFirstMarathon) {
       errs.isFirstMarathon = 'Please indicate if this is your first marathon/running event.';
     }
 
-    // 5. Distance
+    // 6. Distance
     if (!data.distance) {
       errs.distance = 'Please choose the distance you are participating in.';
     } else if (data.distance === 'Other' && !data.otherDistance.trim()) {
       errs.otherDistance = 'Please specify your custom participating distance.';
     }
 
-    // 6. Exercise frequency
+    // 7. Exercise frequency
     if (!data.exerciseFrequency) {
       errs.exerciseFrequency = 'Please tell us how often you exercise or run.';
     }
 
-    // 7. Main motivation
+    // 8. Main motivation
     if (!data.mainMotivation) {
       errs.mainMotivation = 'Please select your main motivation for participating.';
     } else if (data.mainMotivation === 'Other' && !data.otherMotivation.trim()) {
       errs.otherMotivation = 'Please specify your motivation.';
     }
 
-    // 8. Fitness level
+    // 9. Fitness level
     if (!data.fitnessLevel) {
       errs.fitnessLevel = 'Please rate your current fitness level.';
     }
 
-    // 9. Confidence level
+    // 10. Confidence level
     if (!data.confidenceLevel) {
       errs.confidenceLevel = 'Please select your confidence level about completing the distance.';
     }
 
-    // 10. Expectations
+    // 11. Expectations
     if (!data.expectations.trim()) {
       errs.expectations = 'Please describe what you are expecting from today\'s event.';
     } else if (data.expectations.trim().length < 3) {
@@ -134,6 +145,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
   const fillSampleData = () => {
     const sample: PreMarathonFormData = {
       name: 'Rohan Verma',
+      email: 'rohan.verma@example.com',
       ageGroup: '26–35',
       gender: 'Male',
       isFirstMarathon: 'No',
@@ -154,8 +166,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
     e.preventDefault();
     setServerError(null);
 
-    // Mark all as touched
+    // Mark all required as touched
     const allTouched: Record<string, boolean> = {
+      email: true,
       ageGroup: true,
       gender: true,
       isFirstMarathon: true,
@@ -211,8 +224,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
     }
   };
 
-  const totalRequired = 9; // questions 2 to 10
+  const totalRequired = 10; // email + questions 2 to 10
   const answeredCount = [
+    Boolean(formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())),
     Boolean(formData.ageGroup),
     Boolean(formData.gender),
     Boolean(formData.isFirstMarathon),
@@ -226,7 +240,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
 
   const progressPercent = Math.round((answeredCount / totalRequired) * 100);
 
-  // If already submitted, display the official registration pass
+  // If already submitted, display the official registration pass with QR Code
   if (submittedRecord) {
     return (
       <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6">
@@ -240,14 +254,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
               Vijaya Janta Party Marathon 2026
             </div>
             <h2 className="font-display text-3xl font-extrabold tracking-tight mt-1">
-              Registration Confirmed!
+              Registration & QR Pass Confirmed!
             </h2>
             <p className="text-stone-200 text-xs sm:text-sm mt-1 max-w-md mx-auto">
-              Your runner details are officially stored in the Vijaya Janta Party race database.
+              Your details are officially recorded. Scan the QR code below or check your email ({submittedRecord.email}).
             </p>
           </div>
 
-          {/* Bib Digital Pass */}
+          {/* Bib Digital Pass with QR Code */}
           <div className="p-6 sm:p-8 space-y-6">
             <div className="border-2 border-dashed border-orange-500/70 bg-stone-950/70 rounded-2xl p-6 relative">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-6 border-b border-stone-800 pb-5">
@@ -259,7 +273,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
                     {submittedRecord.name || 'Anonymous Runner'}
                   </div>
                   <div className="text-xs text-stone-400 mt-1">
-                    Registered on {new Date(submittedRecord.createdAt).toLocaleDateString()}
+                    Email: <strong className="text-amber-300 font-mono">{submittedRecord.email}</strong>
                   </div>
                 </div>
 
@@ -271,6 +285,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
                     {submittedRecord.bibNumber}
                   </div>
                 </div>
+              </div>
+
+              {/* QR Code Display Container */}
+              <div className="pt-6 pb-4 flex flex-col items-center border-b border-stone-800">
+                <QRCodeDisplay
+                  bibNumber={submittedRecord.bibNumber}
+                  registrationId={submittedRecord.id}
+                  runnerName={submittedRecord.name}
+                  size={180}
+                />
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-5 text-xs">
@@ -295,7 +319,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
               <div className="mt-5 pt-3 border-t border-stone-800 flex items-center justify-between text-xs text-stone-400">
                 <span>Confirmation ID: <strong className="font-mono text-amber-300">{submittedRecord.id}</strong></span>
                 <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                  ● Verified in Backend API
+                  ● Confirmed & Verified in Database
                 </span>
               </div>
             </div>
@@ -330,7 +354,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
 
   return (
     <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6">
-      {/* Form Card with Dramatic Dark Athletic Styling */}
+      {/* Form Card */}
       <div className="bg-stone-900/95 backdrop-blur-xl rounded-3xl border border-stone-800/90 shadow-2xl overflow-hidden text-white">
         {/* Top Header */}
         <div className="p-6 sm:p-8 border-b border-stone-800/80 bg-stone-950/70">
@@ -345,18 +369,18 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
                 Official Marathon Registration Form
               </h2>
               <p className="text-stone-300 text-xs sm:text-sm mt-1">
-                Please complete the 10 questions below to register and receive your official runner number. All fields except Name are required.
+                Complete the fields below to obtain your assigned Bib Number and scannable QR Code pass.
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={fillSampleData}
                 className="text-xs font-semibold text-stone-200 hover:text-white bg-stone-800/90 hover:bg-stone-700 border border-stone-700/80 px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                Fill Sample
+                <span>Fill Sample</span>
               </button>
             </div>
           </div>
@@ -410,8 +434,39 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
               />
               <User className="w-4 h-4 text-stone-500 absolute right-4 top-3.5" />
             </div>
-            <p className="text-xs text-stone-400">
-              Your name will appear on your digital bib if provided.
+          </div>
+
+          {/* EMAIL ADDRESS (Required for QR Code Delivery) */}
+          <div id="field-email" className="space-y-2">
+            <div className="flex items-baseline justify-between">
+              <label htmlFor="input-email" className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="text-amber-400 font-mono text-xs">●</span>
+                <span>Email Address</span>
+                <span className="text-orange-400 font-bold">*</span>
+                <span className="text-xs font-normal text-stone-400">(Required for QR Pass & Email Delivery)</span>
+              </label>
+              {errors.email && (
+                <span className="text-xs font-semibold text-rose-400 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" /> {errors.email}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                id="input-email"
+                type="email"
+                placeholder="e.g. rohan.verma@gmail.com"
+                value={formData.email}
+                onChange={(e) => handleFieldChange('email', e.target.value)}
+                onBlur={() => handleBlur('email')}
+                className={`w-full px-4 py-3 bg-stone-950/80 border rounded-xl text-white text-sm placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors shadow-inner ${
+                  errors.email ? 'border-rose-500 focus:border-rose-500' : 'border-stone-700/80 focus:border-amber-400'
+                }`}
+              />
+              <Mail className="w-4 h-4 text-stone-500 absolute right-4 top-3.5" />
+            </div>
+            <p className="text-[11px] text-stone-400">
+              Your official QR code pass and registration receipt will be emailed here.
             </p>
           </div>
 
@@ -730,10 +785,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
           </div>
 
           {/* Form Actions */}
-          <div className="pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-center gap-4">
-            {/* <div className="text-xs text-stone-400">
+          <div className="pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-xs text-stone-400">
               Submits directly to backend <code className="bg-stone-950 px-2 py-1 rounded font-mono text-amber-300 border border-stone-800">/api/register</code>.
-            </div> */}
+            </div>
 
             <button
               type="submit"
@@ -747,12 +802,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-stone-950 border-t-transparent rounded-full animate-spin" />
-                  <span>Submitting to Backend...</span>
+                  <span>Submitting & Generating QR Code...</span>
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  <span>Submit Registration & Pre-Survey</span>
+                  <span>Submit Registration & Get QR Pass</span>
                 </>
               )}
             </button>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PreMarathonRegistrationRecord, AfterMarathonSurveyRecord } from '../types';
-import { Trophy, CheckCircle2, Share2, Download, Copy, Check, X, Sparkles, Award } from 'lucide-react';
+import { QRCodeDisplay } from './QRCodeDisplay';
+import { Trophy, CheckCircle2, Download, Copy, Check, X, Sparkles, Award, Mail, ExternalLink } from 'lucide-react';
 
 interface CelebrationPostModalProps {
   type: 'registration' | 'survey';
@@ -8,6 +9,7 @@ interface CelebrationPostModalProps {
   surveyRecord?: AfterMarathonSurveyRecord | null;
   onClose: () => void;
   onSwitchToSurvey?: () => void;
+  onOpenVerification?: (bib: string) => void;
 }
 
 export const CelebrationPostModal: React.FC<CelebrationPostModalProps> = ({
@@ -16,15 +18,19 @@ export const CelebrationPostModal: React.FC<CelebrationPostModalProps> = ({
   surveyRecord,
   onClose,
   onSwitchToSurvey,
+  onOpenVerification,
 }) => {
   const [copied, setCopied] = useState(false);
 
   const identifier = registrationRecord?.bibNumber || surveyRecord?.id || 'VJP-2026';
   const name = registrationRecord?.name || surveyRecord?.runnerIdentifier || 'Champion Runner';
+  const email = registrationRecord?.email || '';
 
   const handleCopy = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const verifyUrl = `${origin}/verifyUser?bib=${encodeURIComponent(identifier)}`;
     navigator.clipboard?.writeText(
-      `I am officially registered for the Vijaya Janta Party Marathon 2026! My Bib: ${identifier}`
+      `I am officially registered for the Vijaya Janta Party Marathon 2026! My Bib is ${identifier}. Verify my pass here: ${verifyUrl}`
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -35,7 +41,7 @@ export const CelebrationPostModal: React.FC<CelebrationPostModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/85 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-xl bg-gradient-to-b from-stone-900 via-stone-900 to-stone-950 text-white rounded-3xl border-2 border-amber-500/80 shadow-2xl overflow-hidden my-8">
         {/* Close Button */}
         <button
@@ -73,9 +79,19 @@ export const CelebrationPostModal: React.FC<CelebrationPostModalProps> = ({
           </p>
         </div>
 
+        {/* Email & QR Code Dispatch Banner */}
+        {type === 'registration' && email && (
+          <div className="bg-amber-500/15 border-y border-amber-500/30 px-6 py-3 flex items-center gap-3 text-xs text-amber-300">
+            <Mail className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              Confirmation pass with live scannable QR code generated for <strong className="text-white">{email}</strong>!
+            </span>
+          </div>
+        )}
+
         {/* Digital Souvenir / Race Pass Card */}
         <div className="p-6 sm:p-8 space-y-6">
-          <div className="border-2 border-dashed border-amber-400/80 bg-stone-800/60 rounded-2xl p-6 relative backdrop-blur-xs">
+          <div className="border-2 border-dashed border-amber-400/80 bg-stone-850/70 rounded-2xl p-6 relative backdrop-blur-xs">
             {/* Top row */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-700/80 pb-5">
               <div>
@@ -100,24 +116,36 @@ export const CelebrationPostModal: React.FC<CelebrationPostModalProps> = ({
               </div>
             </div>
 
-            {/* Registration Details */}
+            {/* Registration Details & Interactive QR Code */}
             {type === 'registration' && registrationRecord && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 text-xs">
-                <div className="p-2 bg-stone-900/60 rounded-lg border border-stone-700/40">
-                  <span className="text-stone-400 text-[10px] block">Distance</span>
-                  <span className="font-bold text-white text-sm">{registrationRecord.distance}</span>
+              <div className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-2 bg-stone-900/80 rounded-lg border border-stone-700/60">
+                    <span className="text-stone-400 text-[10px] block">Distance</span>
+                    <span className="font-bold text-white text-sm">{registrationRecord.distance}</span>
+                  </div>
+                  <div className="p-2 bg-stone-900/80 rounded-lg border border-stone-700/60">
+                    <span className="text-stone-400 text-[10px] block">Age Group</span>
+                    <span className="font-bold text-white text-sm">{registrationRecord.ageGroup}</span>
+                  </div>
+                  <div className="p-2 bg-stone-900/80 rounded-lg border border-stone-700/60">
+                    <span className="text-stone-400 text-[10px] block">First Marathon</span>
+                    <span className="font-bold text-white text-sm">{registrationRecord.isFirstMarathon}</span>
+                  </div>
+                  <div className="p-2 bg-stone-900/80 rounded-lg border border-stone-700/60">
+                    <span className="text-stone-400 text-[10px] block">Status</span>
+                    <span className="font-bold text-emerald-400 text-sm">Confirmed</span>
+                  </div>
                 </div>
-                <div className="p-2 bg-stone-900/60 rounded-lg border border-stone-700/40">
-                  <span className="text-stone-400 text-[10px] block">Age Group</span>
-                  <span className="font-bold text-white text-sm">{registrationRecord.ageGroup}</span>
-                </div>
-                <div className="p-2 bg-stone-900/60 rounded-lg border border-stone-700/40">
-                  <span className="text-stone-400 text-[10px] block">First Marathon</span>
-                  <span className="font-bold text-white text-sm">{registrationRecord.isFirstMarathon}</span>
-                </div>
-                <div className="p-2 bg-stone-900/60 rounded-lg border border-stone-700/40">
-                  <span className="text-stone-400 text-[10px] block">Status</span>
-                  <span className="font-bold text-emerald-400 text-sm">Confirmed</span>
+
+                {/* Embedded Live QR Code */}
+                <div className="pt-2 flex flex-col items-center">
+                  <QRCodeDisplay
+                    bibNumber={registrationRecord.bibNumber}
+                    registrationId={registrationRecord.id}
+                    runnerName={registrationRecord.name}
+                    size={170}
+                  />
                 </div>
               </div>
             )}
@@ -140,13 +168,13 @@ export const CelebrationPostModal: React.FC<CelebrationPostModalProps> = ({
               </div>
             )}
 
-            {/* Mock Barcode / Security Strip */}
+            {/* Security Strip */}
             <div className="mt-5 pt-3 border-t border-stone-700/80 flex items-center justify-between text-[11px] text-stone-400">
-              <div className="font-mono tracking-widest text-stone-300 text-xs">
-                ||| | |||| | ||| |||| | ||||| | ||
-              </div>
+              <span className="font-mono text-amber-300">
+                ID: {registrationRecord?.id || surveyRecord?.id}
+              </span>
               <span className="text-emerald-400 font-semibold flex items-center gap-1 text-[11px]">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Backend API Verified
+                <CheckCircle2 className="w-3.5 h-3.5" /> Database Authenticated
               </span>
             </div>
           </div>
@@ -158,8 +186,21 @@ export const CelebrationPostModal: React.FC<CelebrationPostModalProps> = ({
               className="px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border border-stone-700"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copied to Clipboard!' : 'Copy Share Text'}</span>
+              <span>{copied ? 'Copied Share Link!' : 'Copy Share Link'}</span>
             </button>
+
+            {type === 'registration' && onOpenVerification && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenVerification(identifier);
+                }}
+                className="px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-amber-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border border-amber-500/40"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>Open /verifyUser</span>
+              </button>
+            )}
 
             <button
               onClick={handleDownload}
