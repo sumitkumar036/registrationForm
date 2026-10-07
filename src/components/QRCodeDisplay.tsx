@@ -25,7 +25,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   useEffect(() => {
     // Generate verification URL
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const verificationUrl = `${origin}/marathon/verifyUser?bib=${encodeURIComponent(bibNumber)}&id=${encodeURIComponent(registrationId)}&name=${encodeURIComponent(runnerName)}`;
+    const verificationUrl = `${origin}/marathon/#/verifyUser?bib=${encodeURIComponent(bibNumber)}&id=${encodeURIComponent(registrationId)}&name=${encodeURIComponent(runnerName)}`;
     setQrUrl(verificationUrl);
 
     const qrOpts = {
@@ -84,15 +84,15 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
 
       {/* Action Buttons to Test & Download */}
       <div className="flex items-center gap-2 mt-2.5">
-        <a
+        {/* <a
           href={qrUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-[11px] font-bold rounded-lg border border-stone-700 flex items-center gap-1 transition-colors cursor-pointer"
         >
           <ExternalLink className="w-3 h-3 text-amber-400" />
-          {/* <span>Test Verify URL</span> */}
-        </a>
+          <span>Test Verify URL</span>
+        </a> */}
 
         <button
           type="button"
