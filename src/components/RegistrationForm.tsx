@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PreMarathonFormData, PreMarathonRegistrationRecord } from '../types';
 import { QRCodeDisplay } from './QRCodeDisplay';
-import { CheckCircle2, AlertCircle, Send, Sparkles, User, Mail, ArrowRight } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Send, User, Mail } from 'lucide-react';
 import { submitRegistration } from '../Service/api';
 
 interface RegistrationFormProps {
@@ -24,7 +24,6 @@ const MOTIVATIONS = [
 ];
 const FITNESS_LEVELS = ['Excellent', 'Good', 'Average', 'Below average'];
 const CONFIDENCE_LEVELS = ['Very confident', 'Confident', 'Neutral', 'Slightly concerned', 'Not confident'];
-const apiUrl = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbzB4V_g254DOStW4xuaUpyCORB9LlaFTbvTIlK_imcgKwbbZkGsH7r7Lfn67TR9tHLC/exec';
 
 const initialFormData: PreMarathonFormData = {
   name: '',
@@ -42,7 +41,7 @@ const initialFormData: PreMarathonFormData = {
   expectations: '',
 };
 
-export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, onSwitchToSurvey, onOpenVerification }) => {
+export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess }) => {
   const [formData, setFormData] = useState<PreMarathonFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -50,70 +49,41 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
   const [serverError, setServerError] = useState<string | null>(null);
   const [submittedRecord, setSubmittedRecord] = useState<PreMarathonRegistrationRecord | null>(null);
 
-  // Validation function
   const validate = (data: PreMarathonFormData): Record<string, string> => {
     const errs: Record<string, string> = {};
 
-    // 1. Name is optional, no error
+    // Ensure Name is strictly required and validated
+    if (!data.name || !data.name.trim()) {
+      errs.name = 'Please enter your name.';
+    }
 
-    // 2. Email Address (Required for sending confirmation email & QR pass)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!data.email || !data.email.trim()) {
+    if (!data.email.trim()) {
       errs.email = 'Please provide an email address to receive your official QR Code pass.';
     } else if (!emailRegex.test(data.email.trim())) {
       errs.email = 'Please enter a valid email address (e.g. runner@gmail.com).';
     }
 
-    // 3. Age group
-    if (!data.ageGroup) {
-      errs.ageGroup = 'Please select your age group.';
-    }
-
-    // 4. Gender
-    if (!data.gender) {
-      errs.gender = 'Please select your gender.';
-    }
-
-    // 5. First marathon
-    if (!data.isFirstMarathon) {
-      errs.isFirstMarathon = 'Please indicate if this is your first marathon/running event.';
-    }
-
-    // 6. Distance
+    if (!data.ageGroup) errs.ageGroup = 'Please select your age group.';
+    if (!data.gender) errs.gender = 'Please select your gender.';
+    if (!data.isFirstMarathon) errs.isFirstMarathon = 'Please indicate if this is your first marathon.';
+    
     if (!data.distance) {
       errs.distance = 'Please choose the distance you are participating in.';
     } else if (data.distance === 'Other' && !data.otherDistance.trim()) {
       errs.otherDistance = 'Please specify your custom participating distance.';
     }
 
-    // 7. Exercise frequency
-    if (!data.exerciseFrequency) {
-      errs.exerciseFrequency = 'Please tell us how often you exercise or run.';
-    }
-
-    // 8. Main motivation
+    if (!data.exerciseFrequency) errs.exerciseFrequency = 'Please tell us how often you exercise.';
+    
     if (!data.mainMotivation) {
-      errs.mainMotivation = 'Please select your main motivation for participating.';
+      errs.mainMotivation = 'Please select your main motivation.';
     } else if (data.mainMotivation === 'Other' && !data.otherMotivation.trim()) {
       errs.otherMotivation = 'Please specify your motivation.';
     }
 
-    // 9. Fitness level
-    if (!data.fitnessLevel) {
-      errs.fitnessLevel = 'Please rate your current fitness level.';
-    }
-
-    // 10. Confidence level
-    if (!data.confidenceLevel) {
-      errs.confidenceLevel = 'Please select your confidence level about completing the distance.';
-    }
-
-    // 11. Expectations
-    if (!data.expectations.trim()) {
-      errs.expectations = 'Please describe what you are expecting from today\'s event.';
-    } else if (data.expectations.trim().length < 3) {
-      errs.expectations = 'Please enter at least 3 characters for your expectations.';
-    }
+    if (!data.fitnessLevel) errs.fitnessLevel = 'Please rate your current fitness level.';
+    if (!data.confidenceLevel) errs.confidenceLevel = 'Please select your confidence level.';
 
     return errs;
   };
@@ -145,7 +115,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
   };
 
   const fillSampleData = () => {
-    const sample: PreMarathonFormData = {
+    setFormData({
       name: 'Rohan Verma',
       email: 'rohan.verma@example.com',
       ageGroup: '26-35',
@@ -158,9 +128,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
       otherMotivation: '',
       fitnessLevel: 'Good',
       confidenceLevel: 'Very confident',
-      expectations: 'Looking forward to running for community fitness, enjoying great course energy, and completing under 50 minutes.',
-    };
-    setFormData(sample);
+      expectations: 'Looking forward to running for community fitness and completing under 50 minutes.',
+    });
     setErrors({});
   };
 
@@ -168,8 +137,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
     e.preventDefault();
     setServerError(null);
 
-    // Mark all required fields as touched
     const allTouched: Record<string, boolean> = {
+      name: true,
       email: true,
       ageGroup: true,
       gender: true,
@@ -181,7 +150,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
       otherMotivation: true,
       fitnessLevel: true,
       confidenceLevel: true,
-      expectations: true,
     };
     setTouched(allTouched);
 
@@ -200,7 +168,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
     setIsSubmitting(true);
 
     try {
-      // Call the helper function directly
       const result = await submitRegistration(formData);
 
       if (!result.success) {
@@ -212,16 +179,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
         setSubmittedRecord(result.data);
         onSuccess(result.data);
       }
-    } catch (err: any) {
+    } catch {
       setServerError('An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
-
-  const totalRequired = 10; // email + questions 2 to 10
+  const totalRequired = 10;
   const answeredCount = [
     Boolean(formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())),
     Boolean(formData.ageGroup),
@@ -237,12 +202,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
 
   const progressPercent = Math.round((answeredCount / totalRequired) * 100);
 
-  // If already submitted, display the official registration pass with QR Code
   if (submittedRecord) {
     return (
       <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6">
         <div className="bg-stone-900/95 backdrop-blur-md rounded-3xl border-2 border-amber-500/60 shadow-2xl overflow-hidden text-white">
-          {/* Header Banner */}
           <div className="bg-gradient-to-r from-orange-600 via-stone-900 to-emerald-800 text-white p-8 text-center relative overflow-hidden">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-amber-400 text-stone-950 rounded-2xl mb-3 font-bold shadow-lg">
               <CheckCircle2 className="w-8 h-8" />
@@ -258,7 +221,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
             </p>
           </div>
 
-          {/* Bib Digital Pass with QR Code */}
           <div className="p-6 sm:p-8 space-y-6">
             <div className="border-2 border-dashed border-orange-500/70 bg-stone-950/70 rounded-2xl p-6 relative">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-6 border-b border-stone-800 pb-5">
@@ -267,7 +229,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
                     Vijaya Janta Party · Official Participant
                   </div>
                   <div className="text-2xl font-black text-white font-display mt-0.5">
-                    {submittedRecord.name || 'Anonymous Runner'}
+                    {submittedRecord.name}
                   </div>
                   <div className="text-xs text-stone-400 mt-1">
                     Email: <strong className="text-amber-300 font-mono">{submittedRecord.email}</strong>
@@ -284,7 +246,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
                 </div>
               </div>
 
-              {/* QR Code Display Container */}
               <div className="pt-6 pb-4 flex flex-col items-center border-b border-stone-800">
                 <QRCodeDisplay
                   bibNumber={submittedRecord.bibNumber}
@@ -312,16 +273,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
                   <span className="font-bold text-white text-sm">{submittedRecord.confidenceLevel}</span>
                 </div>
               </div>
-
-              <div className="mt-5 pt-3 border-t border-stone-800 flex items-center justify-between text-xs text-stone-400">
-                <span>Confirmation ID: <strong className="font-mono text-amber-300">{submittedRecord.id}</strong></span>
-                <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                  ● Confirmed & Verified in Database
-                </span>
-              </div>
             </div>
 
-            {/* Next Steps Buttons */}
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center pt-2">
               <button
                 onClick={() => {
@@ -334,14 +287,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
               >
                 Register Another Runner
               </button>
-{/* 
-              <button
-                onClick={onSwitchToSurvey}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-stone-950 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Proceed to Post-Race Survey</span>
-                <ArrowRight className="w-4 h-4" />
-              </button> */}
             </div>
           </div>
         </div>
@@ -351,9 +296,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
 
   return (
     <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6">
-      {/* Form Card */}
       <div className="bg-stone-900/95 backdrop-blur-xl rounded-3xl border border-stone-800/90 shadow-2xl overflow-hidden text-white">
-        {/* Top Header */}
         <div className="p-6 sm:p-8 border-b border-stone-800/80 bg-stone-950/70">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -370,19 +313,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
               </p>
             </div>
 
-            <div className="flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={fillSampleData}
-                className="text-xs font-semibold text-stone-200 hover:text-white bg-stone-800/90 hover:bg-stone-700 border border-stone-700/80 px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
-              >
-               
-                <span>Fill Sample</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={fillSampleData}
+              className="text-xs font-semibold text-stone-200 hover:text-white bg-stone-800/90 hover:bg-stone-700 border border-stone-700/80 px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <span>Fill Sample</span>
+            </button>
           </div>
 
-          {/* Completion Progress Bar */}
           <div className="mt-6 pt-4 border-t border-stone-800">
             <div className="flex items-center justify-between text-xs font-semibold text-stone-300 mb-2">
               <span>Required Questions Completed</span>
@@ -399,7 +338,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
           </div>
         </div>
 
-        {/* Server Error Alert */}
         {serverError && (
           <div className="m-6 p-4 bg-rose-950/60 border border-rose-500/40 rounded-xl flex items-start gap-3 text-rose-200 text-sm">
             <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
@@ -411,36 +349,43 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
         )}
 
         <form onSubmit={handleSubmit} noValidate className="p-6 sm:p-8 space-y-9">
-          {/* QUESTION 1: Name (Optional) */}
+          {/* Name */}
           <div id="field-name" className="space-y-2">
             <div className="flex items-baseline justify-between">
               <label htmlFor="input-name" className="text-sm font-bold text-white flex items-center gap-2">
                 <span className="text-amber-400 font-mono text-xs">1.</span>
                 <span>Name</span>
-                <span className="text-xs font-normal text-stone-400">(Optional)</span>
+                <span className="text-orange-400 font-bold">*</span>
               </label>
+              {errors.name && (
+                <span className="text-xs font-semibold text-rose-400 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" /> {errors.name}
+                </span>
+              )}
             </div>
             <div className="relative">
               <input
                 id="input-name"
                 type="text"
-                placeholder="e.g. Rohan Verma (or leave blank to remain anonymous)"
+                placeholder="e.g. Rohan Verma"
                 value={formData.name}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
-                className="w-full px-4 py-3 bg-stone-950/80 border border-stone-700/80 rounded-xl text-white text-sm placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400 transition-colors shadow-inner"
+                onBlur={() => handleBlur('name')}
+                className={`w-full px-4 py-3 bg-stone-950/80 border rounded-xl text-white text-sm placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors shadow-inner ${
+                  errors.name ? 'border-rose-500 focus:border-rose-500' : 'border-stone-700/80 focus:border-amber-400'
+                }`}
               />
               <User className="w-4 h-4 text-stone-500 absolute right-4 top-3.5" />
             </div>
           </div>
 
-          {/* EMAIL ADDRESS (Required for QR Code Delivery) */}
+          {/* Email */}
           <div id="field-email" className="space-y-2">
             <div className="flex items-baseline justify-between">
               <label htmlFor="input-email" className="text-sm font-bold text-white flex items-center gap-2">
                 <span className="text-amber-400 font-mono text-xs">●</span>
                 <span>Email Address</span>
                 <span className="text-orange-400 font-bold">*</span>
-                <span className="text-xs font-normal text-stone-400">(Required for QR Pass & Email Delivery)</span>
               </label>
               {errors.email && (
                 <span className="text-xs font-semibold text-rose-400 flex items-center gap-1">
@@ -462,12 +407,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
               />
               <Mail className="w-4 h-4 text-stone-500 absolute right-4 top-3.5" />
             </div>
-            <p className="text-[11px] text-stone-400">
-              Your official QR code pass and registration receipt will be emailed here.
-            </p>
           </div>
 
-          {/* QUESTION 2: Age Group */}
+          {/* 2. Age Group */}
           <div id="field-ageGroup" className="space-y-3">
             <div className="flex items-baseline justify-between">
               <label className="text-sm font-bold text-white flex items-center gap-2">
@@ -493,13 +435,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
                       : 'border-stone-800 bg-stone-950/60 text-stone-300 hover:border-stone-700 hover:bg-stone-800/80 hover:text-white'
                   }`}
                 >
-                  <span className="block">{age}</span>
+                  {age}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* QUESTION 3: Gender */}
+          {/* 3. Gender */}
           <div id="field-gender" className="space-y-3">
             <div className="flex items-baseline justify-between">
               <label className="text-sm font-bold text-white flex items-center gap-2">
@@ -531,7 +473,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
             </div>
           </div>
 
-          {/* QUESTION 4: Is this your first marathon/running event? */}
+          {/* 4. First Marathon */}
           <div id="field-isFirstMarathon" className="space-y-3">
             <div className="flex items-baseline justify-between">
               <label className="text-sm font-bold text-white flex items-center gap-2">
@@ -563,7 +505,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
             </div>
           </div>
 
-          {/* QUESTION 5: What distance are you participating in? */}
+          {/* 5. Distance */}
           <div id="field-distance" className="space-y-3">
             <div className="flex items-baseline justify-between">
               <label className="text-sm font-bold text-white flex items-center gap-2">
@@ -598,19 +540,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
               <div className="pt-2">
                 <input
                   type="text"
-                  placeholder="Specify distance (e.g. 15 KM, 42 KM Full Marathon)"
+                  placeholder="Specify distance (e.g. 15 KM)"
                   value={formData.otherDistance}
                   onChange={(e) => handleFieldChange('otherDistance', e.target.value)}
                   onBlur={() => handleBlur('otherDistance')}
-                  className={`w-full px-4 py-2.5 bg-stone-950/80 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 ${
-                    errors.otherDistance ? 'border-rose-500 bg-rose-950/30' : 'border-stone-700'
-                  }`}
+                  className="w-full px-4 py-2.5 bg-stone-950/80 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 border-stone-700"
                 />
               </div>
             )}
           </div>
 
-          {/* QUESTION 6: How often do you exercise or run? */}
+          {/* 6. Exercise Frequency */}
           <div id="field-exerciseFrequency" className="space-y-3">
             <div className="flex items-baseline justify-between">
               <label className="text-sm font-bold text-white flex items-center gap-2">
@@ -642,7 +582,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
             </div>
           </div>
 
-          {/* QUESTION 7: What is your main motivation for participating? */}
+          {/* 7. Motivation */}
           <div id="field-mainMotivation" className="space-y-3">
             <div className="flex items-baseline justify-between">
               <label className="text-sm font-bold text-white flex items-center gap-2">
@@ -672,24 +612,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
                 </button>
               ))}
             </div>
-
-            {formData.mainMotivation === 'Other' && (
-              <div className="pt-2">
-                <input
-                  type="text"
-                  placeholder="Tell us what motivates you (e.g. In memory of a loved one, corporate team challenge)"
-                  value={formData.otherMotivation}
-                  onChange={(e) => handleFieldChange('otherMotivation', e.target.value)}
-                  onBlur={() => handleBlur('otherMotivation')}
-                  className={`w-full px-4 py-2.5 bg-stone-950/80 border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 ${
-                    errors.otherMotivation ? 'border-rose-500 bg-rose-950/30' : 'border-stone-700'
-                  }`}
-                />
-              </div>
-            )}
           </div>
 
-          {/* QUESTION 8: How would you rate your current fitness level? */}
+          {/* 8. Fitness Level */}
           <div id="field-fitnessLevel" className="space-y-3">
             <div className="flex items-baseline justify-between">
               <label className="text-sm font-bold text-white flex items-center gap-2">
@@ -721,7 +646,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
             </div>
           </div>
 
-          {/* QUESTION 9: How confident are you about completing your chosen distance? */}
+          {/* 9. Confidence Level */}
           <div id="field-confidenceLevel" className="space-y-3">
             <div className="flex items-baseline justify-between">
               <label className="text-sm font-bold text-white flex items-center gap-2">
@@ -753,35 +678,24 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
             </div>
           </div>
 
-          {/* QUESTION 10: What are you expecting from today's event? (Short answer) */}
+          {/* 10. Expectations */}
           <div id="field-expectations" className="space-y-2">
-            <div className="flex items-baseline justify-between">
-              <label htmlFor="input-expectations" className="text-sm font-bold text-white flex items-center gap-2">
-                <span className="text-amber-400 font-mono text-xs">10.</span>
-                <span>What are you expecting from today's event?</span>
-                <span className="text-orange-400 font-bold">*</span>
-                <span className="text-xs font-normal text-stone-400">(Short answer)</span>
-              </label>
-              {errors.expectations && (
-                <span className="text-xs font-semibold text-rose-400 flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5" /> {errors.expectations}
-                </span>
-              )}
-            </div>
+            <label htmlFor="input-expectations" className="text-sm font-bold text-white flex items-center gap-2">
+              <span className="text-amber-400 font-mono text-xs">10.</span>
+              <span>What are you expecting from today's event?</span>
+              <span className="text-xs font-normal text-stone-400">(Optional)</span>
+            </label>
             <textarea
               id="input-expectations"
               rows={3}
-              placeholder="e.g. Great atmospheric energy, well-placed hydration stations, and reaching a personal best finish time."
+              placeholder="e.g. Great atmospheric energy and reaching a personal best finish time."
               value={formData.expectations}
               onChange={(e) => handleFieldChange('expectations', e.target.value)}
-              onBlur={() => handleBlur('expectations')}
-              className={`w-full px-4 py-3 bg-stone-950/80 border rounded-xl text-white text-sm placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400 transition-colors shadow-inner ${
-                errors.expectations ? 'border-rose-500 bg-rose-950/20' : 'border-stone-700/80'
-              }`}
+              className="w-full px-4 py-3 bg-stone-950/80 border border-stone-700/80 rounded-xl text-white text-sm placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400 transition-colors shadow-inner"
             />
           </div>
 
-          {/* Form Actions */}
+          {/* Submit Actions */}
           <div className="pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               type="submit"

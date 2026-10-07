@@ -28,7 +28,9 @@ export const CelebrationPostModal: React.FC<CelebrationPostModalProps> = ({
 
   const handleCopy = () => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const verifyUrl = `${origin}/verifyUser?bib=${encodeURIComponent(identifier)}`;
+    // ✅ Match the exact same URL structure used in your backend Apps Script email QR payload
+    const verifyUrl = `${origin}/marathon/#/verifyUser?bib=${encodeURIComponent(identifier)}&id=${encodeURIComponent(registrationRecord?.id || '')}&name=${encodeURIComponent(name)}`;
+    
     navigator.clipboard?.writeText(
       `I am officially registered for the Vijaya Janta Party Marathon 2026! My Bib is ${identifier}. Verify my pass here: ${verifyUrl}`
     );
