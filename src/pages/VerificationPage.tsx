@@ -1,25 +1,26 @@
 import React, { useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CelebrationPostModal } from '../components/CelebrationPostModal';
 import { AthleticGraphicsBackground } from '../components/AthleticGraphicsBackground';
 import { PreMarathonRegistrationRecord } from '../types';
 
 export const VerificationPage: React.FC = () => {
-  // Extract verified runner query details from URL
-  const verifiedRecord = useMemo<PreMarathonRegistrationRecord | null>(() => {
-    if (typeof window === 'undefined') return null;
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-    const params = new URLSearchParams(window.location.search);
-    const bib = params.get('bib');
+  // Extract verified runner query details from React Router's searchParams
+  const verifiedRecord = useMemo<PreMarathonRegistrationRecord | null>(() => {
+    const bib = searchParams.get('bib');
     if (!bib) return null;
 
     return {
-      id: params.get('id') || `REG-2026-${bib.replace(/\D/g, '')}`,
+      id: searchParams.get('id') || `REG-2026-${bib.replace(/\D/g, '')}`,
       bibNumber: bib,
-      name: params.get('name') || 'Registered Participant',
-      email: params.get('email') || '',
-      distance: params.get('distance') || '10 KM',
-      ageGroup: params.get('ageGroup') || '26–35',
-      gender: params.get('gender') || 'Male',
+      name: searchParams.get('name') || 'Registered Participant',
+      email: searchParams.get('email') || '',
+      distance: searchParams.get('distance') || '10 KM',
+      ageGroup: searchParams.get('ageGroup') || '26–35',
+      gender: searchParams.get('gender') || 'Male',
       isFirstMarathon: 'No',
       otherDistance: '',
       exerciseFrequency: '',
@@ -30,10 +31,10 @@ export const VerificationPage: React.FC = () => {
       expectations: '',
       createdAt: new Date().toISOString(),
     };
-  }, []);
+  }, [searchParams]);
 
   const handleGoHome = () => {
-    window.location.href = '/';
+    navigate('/');
   };
 
   return (

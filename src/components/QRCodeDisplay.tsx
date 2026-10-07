@@ -91,7 +91,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
           className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-[11px] font-bold rounded-lg border border-stone-700 flex items-center gap-1 transition-colors cursor-pointer"
         >
           <ExternalLink className="w-3 h-3 text-amber-400" />
-          <span>Test Verify URL</span>
+          {/* <span>Test Verify URL</span> */}
         </a>
 
         <button
