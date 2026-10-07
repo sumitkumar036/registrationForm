@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PreMarathonFormData, PreMarathonRegistrationRecord } from '../types';
 import { QRCodeDisplay } from './QRCodeDisplay';
 import { CheckCircle2, AlertCircle, Send, Sparkles, User, Mail, ArrowRight } from 'lucide-react';
+import { submitRegistration } from '../Service/api';
 
 interface RegistrationFormProps {
   onSuccess: (record: PreMarathonRegistrationRecord) => void;
@@ -9,10 +10,10 @@ interface RegistrationFormProps {
   onOpenVerification?: (bib: string) => void;
 }
 
-const AGE_GROUPS = ['Under 18', '18–25', '26–35', '36–45', '46–55', '56+'];
+const AGE_GROUPS = ['Under 18', '18-25', '26-35', '36-45', '46-55', '56+'];
 const GENDERS = ['Male', 'Female', 'Prefer not to say'];
 const DISTANCES = ['3 KM', '5 KM', '10 KM', 'Half Marathon', 'Other'];
-const EXERCISE_FREQUENCIES = ['Daily', '3–5 times a week', '1–2 times a week', 'Occasionally', 'Rarely'];
+const EXERCISE_FREQUENCIES = ['Daily', '3-5 times a week', '1-2 times a week', 'Occasionally', 'Rarely'];
 const MOTIVATIONS = [
   'Fitness & health',
   'Personal challenge',
@@ -23,6 +24,7 @@ const MOTIVATIONS = [
 ];
 const FITNESS_LEVELS = ['Excellent', 'Good', 'Average', 'Below average'];
 const CONFIDENCE_LEVELS = ['Very confident', 'Confident', 'Neutral', 'Slightly concerned', 'Not confident'];
+const apiUrl = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbzB4V_g254DOStW4xuaUpyCORB9LlaFTbvTIlK_imcgKwbbZkGsH7r7Lfn67TR9tHLC/exec';
 
 const initialFormData: PreMarathonFormData = {
   name: '',
@@ -146,12 +148,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
     const sample: PreMarathonFormData = {
       name: 'Rohan Verma',
       email: 'rohan.verma@example.com',
-      ageGroup: '26–35',
+      ageGroup: '26-35',
       gender: 'Male',
       isFirstMarathon: 'No',
       distance: '10 KM',
       otherDistance: '',
-      exerciseFrequency: '3–5 times a week',
+      exerciseFrequency: '3-5 times a week',
       mainMotivation: 'Fitness & health',
       otherMotivation: '',
       fitnessLevel: 'Good',
@@ -166,7 +168,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
     e.preventDefault();
     setServerError(null);
 
-    // Mark all required as touched
+    // Mark all required fields as touched
     const allTouched: Record<string, boolean> = {
       email: true,
       ageGroup: true,
@@ -198,31 +200,26 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      // Call the helper function directly
+      const result = await submitRegistration(formData);
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
+      if (!result.success) {
         setServerError(result.message || 'Failed to submit registration. Please verify your inputs.');
         if (result.errors) {
           setErrors(result.errors);
         }
-      } else {
+      } else if (result.data) {
         setSubmittedRecord(result.data);
         onSuccess(result.data);
       }
     } catch (err: any) {
-      setServerError('Network error connecting to the server. Please try again.');
+      setServerError('An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+
 
   const totalRequired = 10; // email + questions 2 to 10
   const answeredCount = [
@@ -785,11 +782,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
           </div>
 
           {/* Form Actions */}
-          <div className="pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-xs text-stone-400">
-              Submits directly to backend <code className="bg-stone-950 px-2 py-1 rounded font-mono text-amber-300 border border-stone-800">/api/register</code>.
-            </div>
-
+          <div className="pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               type="submit"
               disabled={isSubmitting}

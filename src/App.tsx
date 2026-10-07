@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { RegistrationForm } from './components/RegistrationForm';
 import { AfterMarathonSurveyForm } from './components/AfterMarathonSurveyForm';
 import { MarathonVisualBanner } from './components/MarathonVisualBanner';
@@ -7,42 +7,79 @@ import { CelebrationConfetti } from './components/CelebrationConfetti';
 import { CelebrationPostModal } from './components/CelebrationPostModal';
 import { PreMarathonRegistrationRecord, AfterMarathonSurveyRecord } from './types';
 import { Users, CheckCircle2 } from 'lucide-react';
+import { fetchParticipantCount } from './Service/api';
 
 export default function App() {
   const [activeView, setActiveView] = useState<'register' | 'survey'>('register');
-  const [registeredCount, setRegisteredCount] = useState<number>(3);
+  const [registeredCount, setRegisteredCount] = useState<number>(0);
   const [lastRegistered, setLastRegistered] = useState<PreMarathonRegistrationRecord | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Celebration state
+  // Celebration modal state
   const [celebrationActive, setCelebrationActive] = useState<boolean>(false);
   const [celebrationType, setCelebrationType] = useState<'registration' | 'survey'>('registration');
   const [celebrationRegRecord, setCelebrationRegRecord] = useState<PreMarathonRegistrationRecord | null>(null);
   const [celebrationSurRecord, setCelebrationSurRecord] = useState<AfterMarathonSurveyRecord | null>(null);
 
-  // Fetch registered number from backend API
-  const fetchRegisteredNumber = async () => {
-    try {
-      const res = await fetch('/api/stats');
-      if (res.ok) {
-        const data = await res.json();
-        setRegisteredCount(data.totalRegistrations);
-      }
-    } catch (e) {
-      console.error('Failed to fetch registered count:', e);
+  // 1. Check URL parameters on mount (handles /verifyUser?bib=... or ?bib=...)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const bib = params.get('bib');
+
+    if (bib) {
+      const id = params.get('id') || `REG-2026-${bib.replace(/\D/g, '')}`;
+      const name = params.get('name') || 'Registered Participant';
+      const distance = params.get('distance') || '10 KM';
+      const ageGroup = params.get('ageGroup') || '26–35';
+
+      const verifiedRecord: PreMarathonRegistrationRecord = {
+        id: id,
+        bibNumber: bib,
+        name: name,
+        email: params.get('email') || '',
+        distance: distance,
+        ageGroup: ageGroup,
+        gender: params.get('gender') || 'Male',
+        isFirstMarathon: 'No',
+        otherDistance: '',
+        exerciseFrequency: '',
+        mainMotivation: '',
+        otherMotivation: '',
+        fitnessLevel: 'Good',
+        confidenceLevel: 'Confident',
+        expectations: '',
+        timestamp: new Date().toISOString(),
+      };
+
+      setCelebrationType('registration');
+      setCelebrationRegRecord(verifiedRecord);
+      setCelebrationSurRecord(null);
+      setCelebrationActive(true);
     }
-  };
+  }, []);
+
+  const loadParticipantCount = useCallback(async () => {
+    try {
+      const count = await fetchParticipantCount();
+      if (typeof count === 'number') {
+        setRegisteredCount(count);
+      }
+    } catch (err) {
+      console.error('Failed to load participant count:', err);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchRegisteredNumber();
-  }, []);
+    loadParticipantCount();
+  }, [loadParticipantCount]);
 
   const handleRegistrationSuccess = (record: PreMarathonRegistrationRecord) => {
     setLastRegistered(record);
-    fetchRegisteredNumber();
+    loadParticipantCount();
     showToast(`Registered successfully! Your Assigned Number: ${record.bibNumber}`);
 
-    // Trigger celebration post & confetti
     setCelebrationType('registration');
     setCelebrationRegRecord(record);
     setCelebrationSurRecord(null);
@@ -50,10 +87,9 @@ export default function App() {
   };
 
   const handleSurveySuccess = (record: AfterMarathonSurveyRecord) => {
-    fetchRegisteredNumber();
+    loadParticipantCount();
     showToast(`Survey submitted successfully! Reference: ${record.id}`);
 
-    // Trigger celebration post & confetti
     setCelebrationType('survey');
     setCelebrationSurRecord(record);
     setCelebrationRegRecord(null);
@@ -67,30 +103,30 @@ export default function App() {
     }, 5000);
   };
 
+  const handleCloseCelebration = () => {
+    setCelebrationActive(false);
+    // Clean up the URL query params without reloading
+    if (window.location.search || window.location.pathname.includes('/verifyUser')) {
+      window.history.replaceState({}, '', '/');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#080B11] text-stone-100 flex flex-col font-sans relative selection:bg-amber-500 selection:text-stone-950">
-      {/* Full-bleed Athletic Graphics Background */}
       <AthleticGraphicsBackground />
 
-      {/* Confetti Explosion on Success */}
-      {celebrationActive && (
-        <CelebrationConfetti
-          duration={6000}
-          onComplete={() => {
-            // Keep confetti until modal is closed
-          }}
-        />
-      )}
+      {/* Confetti Explosion */}
+      {celebrationActive && <CelebrationConfetti duration={6000} />}
 
-      {/* Celebration Post Success Modal */}
+      {/* Celebration Modal automatically pops up when URL has ?bib= */}
       {celebrationActive && (
         <CelebrationPostModal
           type={celebrationType}
           registrationRecord={celebrationRegRecord}
           surveyRecord={celebrationSurRecord}
-          onClose={() => setCelebrationActive(false)}
+          onClose={handleCloseCelebration}
           onSwitchToSurvey={() => {
-            setCelebrationActive(false);
+            handleCloseCelebration();
             setActiveView('survey');
           }}
         />
@@ -110,11 +146,10 @@ export default function App() {
         </div>
       )}
 
-      {/* Top Header with Vijaya Janta Party Branding and Registered Number */}
+      {/* Header */}
       <header className="sticky top-0 z-30 bg-[#0B0F19]/90 backdrop-blur-xl border-b border-stone-800 shadow-md">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* VJP Emblem badge with radiant gradient */}
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 via-amber-400 to-emerald-500 p-0.5 shadow-md flex items-center justify-center">
               <div className="w-full h-full bg-stone-950 rounded-[10px] flex items-center justify-center text-amber-400 font-black text-xs tracking-tight">
                 VJP
@@ -124,13 +159,9 @@ export default function App() {
               <h1 className="font-display font-black text-base sm:text-lg text-white tracking-tight leading-tight">
                 Vijaya Janta Party Marathon 2026
               </h1>
-              {/* <p className="text-[11px] font-bold text-orange-400">
-                विजय जनता पार्टी · वार्षिक मैराथन
-              </p> */}
             </div>
           </div>
 
-          {/* Registered Number Display in Header */}
           <div className="flex items-center gap-2.5 bg-stone-900/90 border border-amber-500/40 px-4 py-1.5 rounded-xl shadow-inner">
             <Users className="w-4 h-4 text-amber-400" />
             <div className="text-right">
@@ -145,38 +176,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Single Page Content */}
+      {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 w-full flex-1 relative z-10">
-        {/* Marathon Visual Graphic Banner */}
         <MarathonVisualBanner registeredCount={registeredCount} />
 
-        {/* Toggle Switcher between Registration and Survey */}
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex p-1 bg-stone-900/90 backdrop-blur rounded-2xl border border-stone-800 shadow-lg">
-            {/* <button
-              onClick={() => setActiveView('register')}
-              className={`px-6 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
-                activeView === 'register'
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-stone-950 font-black shadow-md'
-                  : 'text-stone-400 hover:text-white'
-              }`}
-            >
-              1. Marathon Registration
-            </button> */}
-            {/* <button
-              onClick={() => setActiveView('survey')}
-              className={`px-6 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
-                activeView === 'survey'
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-stone-950 font-black shadow-md'
-                  : 'text-stone-400 hover:text-white'
-              }`}
-            >
-              2. After Marathon Survey
-            </button> */}
-          </div>
-        </div>
-
-        {/* Active Form */}
         {activeView === 'register' ? (
           <RegistrationForm
             onSuccess={handleRegistrationSuccess}
@@ -191,13 +194,11 @@ export default function App() {
         )}
       </main>
 
-      {/* Quiet Minimal Dark Footer */}
+      {/* Footer */}
       <footer className="border-t border-stone-800/80 bg-stone-950/80 backdrop-blur py-6 mt-12 text-xs text-stone-400 relative z-10">
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <div>
-            <span className="font-bold text-white">
-              Vijaya Janta Party Marathon 2026
-            </span>
+            <span className="font-bold text-white">Vijaya Janta Party Marathon 2026</span>
             <span className="text-stone-600 mx-2">·</span>
             <span>@CDTC</span>
           </div>
