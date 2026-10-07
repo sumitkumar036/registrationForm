@@ -4,12 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "vite build",
-    "start": "tsx server.ts",
-    "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+  "dev": "vite",
+  "build": "tsc && vite build",
+  "preview": "vite preview"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -22,6 +19,7 @@
     "qrcode": "^1.5.4",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "react-router-dom": "^7.18.4",
     "vite": "^8.3.0"
   },
   "devDependencies": {

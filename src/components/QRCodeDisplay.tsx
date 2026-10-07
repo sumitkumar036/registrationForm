@@ -25,7 +25,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   useEffect(() => {
     // Generate verification URL
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const verificationUrl = `${origin}/verifyUser?bib=${encodeURIComponent(bibNumber)}&id=${encodeURIComponent(registrationId)}&name=${encodeURIComponent(runnerName)}`;
+    const verificationUrl = `${origin}/marathon/verifyUser?bib=${encodeURIComponent(bibNumber)}&id=${encodeURIComponent(registrationId)}&name=${encodeURIComponent(runnerName)}`;
     setQrUrl(verificationUrl);
 
     const qrOpts = {
