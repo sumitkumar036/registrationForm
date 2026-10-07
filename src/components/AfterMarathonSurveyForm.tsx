@@ -390,7 +390,7 @@ export const AfterMarathonSurveyForm: React.FC<AfterMarathonSurveyFormProps> = (
                 onClick={fillSampleSurvey}
                 className="text-xs font-semibold text-stone-200 hover:text-white bg-stone-800/90 hover:bg-stone-700 border border-stone-700/80 px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                
                 Fill Sample
               </button>
             </div>

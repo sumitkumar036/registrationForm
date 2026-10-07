@@ -334,14 +334,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
               >
                 Register Another Runner
               </button>
-
+{/* 
               <button
                 onClick={onSwitchToSurvey}
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-stone-950 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Proceed to Post-Race Survey</span>
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
@@ -376,7 +376,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, o
                 onClick={fillSampleData}
                 className="text-xs font-semibold text-stone-200 hover:text-white bg-stone-800/90 hover:bg-stone-700 border border-stone-700/80 px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+               
                 <span>Fill Sample</span>
               </button>
             </div>

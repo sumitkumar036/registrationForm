@@ -1,14 +1,21 @@
 import React from 'react';
+import icon from '../images/icon.png';
 
-export const MarathonVisualBanner: React.FC<{ registeredCount: number }> = ({ registeredCount }) => {
+export interface MarathonVisualBannerProps {
+  registeredCount: number;
+}
+
+export const MarathonVisualBanner: React.FC<MarathonVisualBannerProps> = ({ registeredCount }) => {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-stone-900 via-stone-850 to-stone-950 text-white border border-stone-800 shadow-2xl mb-8">
-      {/* Background Graphic SVG */}
+    <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-stone-900 via-stone-850 to-stone-950 text-white border border-stone-800 shadow-2xl mb-6 sm:mb-8 transition-all duration-300">
+      
+      {/* Background Graphic SVG - Fully responsive viewBox preservation */}
       <svg
-        className="w-full h-48 sm:h-64 lg:h-72 object-cover"
+        className="w-full h-56 sm:h-64 lg:h-72 object-cover"
         viewBox="0 0 1200 400"
         preserveAspectRatio="xMidYMid slice"
         xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
       >
         <defs>
           <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
@@ -109,18 +116,13 @@ export const MarathonVisualBanner: React.FC<{ registeredCount: number }> = ({ re
         <line x1="0" y1="272" x2="1200" y2="272" stroke="#FFFFFF" strokeWidth="2" opacity="0.3" />
 
         {/* Silhouettes of Energetic Marathon Runners */}
-        {/* Runner 1: Leading Sprinter (Crossing Finish Line, Arms Raised in Victory) */}
+        {/* Runner 1: Leading Sprinter */}
         <g transform="translate(560, 185) scale(0.95)" fill="#FFFFFF">
-          {/* Head */}
           <circle cx="40" cy="18" r="9" />
-          {/* Torso with bib */}
           <path d="M 32 30 L 48 30 L 44 65 L 36 65 Z" />
-          {/* Bib Number */}
           <rect x="34" y="38" width="12" height="10" fill="#F97316" rx="1" />
-          {/* Raised Victory Arms */}
           <path d="M 32 32 L 18 10 L 22 8 L 36 28 Z" />
           <path d="M 48 32 L 62 10 L 58 8 L 44 28 Z" />
-          {/* Dynamic Striding Legs */}
           <path d="M 36 63 L 24 88 L 14 105 L 19 107 L 29 90 L 40 66 Z" />
           <path d="M 44 63 L 56 82 L 72 92 L 70 96 L 52 86 L 40 66 Z" />
         </g>
@@ -128,20 +130,16 @@ export const MarathonVisualBanner: React.FC<{ registeredCount: number }> = ({ re
         {/* Runner 2: Female Runner in full stride */}
         <g transform="translate(450, 195) scale(0.85)" fill="#FBBF24">
           <circle cx="38" cy="18" r="8.5" />
-          {/* Ponytail hair */}
           <path d="M 32 17 Q 20 22 22 28 Q 28 26 33 22 Z" />
-          {/* Torso */}
           <path d="M 31 28 L 45 28 L 42 62 L 34 62 Z" />
           <rect x="33" y="36" width="10" height="9" fill="#10B981" rx="1" />
-          {/* Arms */}
           <path d="M 32 30 L 20 42 L 28 50" stroke="#FBBF24" strokeWidth="4" strokeLinecap="round" fill="none" />
           <path d="M 44 30 L 58 40 L 52 48" stroke="#FBBF24" strokeWidth="4" strokeLinecap="round" fill="none" />
-          {/* Legs */}
           <path d="M 35 62 L 18 85 L 12 102" stroke="#FBBF24" strokeWidth="5" strokeLinecap="round" fill="none" />
           <path d="M 41 62 L 58 80 L 76 86" stroke="#FBBF24" strokeWidth="5" strokeLinecap="round" fill="none" />
         </g>
 
-        {/* Runner 3: Pacing Runner with focus */}
+        {/* Runner 3: Pacing Runner */}
         <g transform="translate(680, 200) scale(0.88)" fill="#34D399">
           <circle cx="36" cy="18" r="8.5" />
           <path d="M 30 28 L 44 28 L 40 62 L 32 62 Z" />
@@ -152,52 +150,65 @@ export const MarathonVisualBanner: React.FC<{ registeredCount: number }> = ({ re
           <path d="M 38 62 L 56 78 L 70 88" stroke="#34D399" strokeWidth="5" strokeLinecap="round" fill="none" />
         </g>
 
-        {/* Runner 4: Chasing runner in distance */}
+        {/* Runner 4 & 5: Distant Chasing Runners */}
         <g transform="translate(360, 215) scale(0.7)" fill="#E2E8F0" opacity="0.85">
           <circle cx="36" cy="18" r="8" />
           <path d="M 30 28 L 44 28 L 40 62 L 32 62 Z" />
-          <path d="M 34 62 L 18 88" stroke="#E2E8F0" strokeWidth="5" strokeLinecap="round" fill="none" />
-          <path d="M 40 62 L 60 82" stroke="#E2E8F0" strokeWidth="5" strokeLinecap="round" fill="none" />
         </g>
-
-        {/* Runner 5: Second chasing runner */}
         <g transform="translate(790, 215) scale(0.72)" fill="#FED7AA" opacity="0.85">
           <circle cx="36" cy="18" r="8" />
           <path d="M 30 28 L 44 28 L 40 62 L 32 62 Z" />
-          <path d="M 34 62 L 20 84" stroke="#FED7AA" strokeWidth="5" strokeLinecap="round" fill="none" />
-          <path d="M 40 62 L 62 80" stroke="#FED7AA" strokeWidth="5" strokeLinecap="round" fill="none" />
         </g>
       </svg>
 
-      {/* Overlay Content with Vijaya Janta Party Branding & Registered Number */}
-      <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-transparent flex flex-col justify-end p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500/90 to-amber-500/90 text-stone-950 font-black text-[11px] sm:text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
-              <span>Managed by Vijaya Janta Party</span>
-              {/* <span aria-hidden="true">·</span> */}
-              {/* <span>विजय जनता पार्टी</span> */}
+      {/* Overlay Content with Responsive Flex/Grid Layout */}
+      <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/60 to-transparent flex flex-col justify-end p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          
+          {/* Left Title and Partner Branding */}
+          <div className="space-y-1.5 min-w-0 flex-1">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500/90 to-amber-500/90 text-stone-950 font-black text-[10px] sm:text-xs px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm max-w-full truncate">
+              <img 
+                src={icon} 
+                alt="CDTC Logo" 
+                className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 object-contain" 
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+              <a 
+                href="https://cdtc.in" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-white truncate"
+              >
+                Co-powered by CDTC
+              </a>
             </div>
-            <h2 className="font-display text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-md">
+
+            <h2 className="font-display text-lg sm:text-2xl lg:text-3xl font-black text-white tracking-tight drop-shadow-md leading-snug sm:leading-tight truncate sm:whitespace-normal">
               Vijaya Janta Party Annual Marathon 2026
             </h2>
-            <p className="text-xs sm:text-sm text-stone-200 font-medium max-w-xl drop-shadow">
+            
+            <p className="text-xs sm:text-sm text-stone-200 font-medium max-w-xl drop-shadow line-clamp-1 sm:line-clamp-none">
               Run for Unity, Fitness & Victory
             </p>
           </div>
 
-          {/* Registered Number Highlight Badge */}
-          <div className="bg-stone-900/95 backdrop-blur border-2 border-amber-400/80 rounded-2xl p-4 shadow-xl shrink-0 text-center sm:text-right min-w-[180px]">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+          {/* Registered Number Highlight Badge - Fluid scaling on mobile */}
+          <div className="bg-stone-900/95 backdrop-blur border border-amber-400/80 rounded-2xl px-4 py-3 sm:p-4 shadow-xl shrink-0 flex md:flex-col items-center md:items-end justify-between md:justify-center min-w-0 md:min-w-[170px]">
+            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-400 md:text-right">
               Total Registered
             </div>
-            <div className="font-display font-black text-3xl sm:text-4xl text-white tabular-nums tracking-tight">
-              {registeredCount}
+            <div className="font-display font-black text-2xl sm:text-3xl lg:text-4xl text-white tabular-nums tracking-tight">
+              {registeredCount.toLocaleString()}
             </div>
-            <div className="text-[11px] text-stone-300 font-medium">
+            <div className="hidden md:block text-[11px] text-stone-300 font-medium">
               Runners on Board
             </div>
           </div>
+
         </div>
       </div>
     </div>

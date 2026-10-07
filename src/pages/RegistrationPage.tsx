@@ -103,12 +103,14 @@ export const RegistrationPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 via-amber-400 to-emerald-500 p-0.5 shadow-md flex items-center justify-center">
               <div className="w-full h-full bg-stone-950 rounded-[10px] flex items-center justify-center text-amber-400 font-black text-xs tracking-tight">
-                VJP
+               VJP
               </div>
             </div>
             <div>
               <h1 className="font-display font-black text-base sm:text-lg text-white tracking-tight leading-tight">
-                Vijaya Janta Party Marathon 2026
+                <a href="https://vjpparty.com" target="_blank" rel="noopener noreferrer" className="text-white">
+                   Vijaya Janta Party Marathon 2026 
+                </a>
               </h1>
             </div>
           </div>
