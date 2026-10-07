@@ -50,7 +50,7 @@ export default function App() {
         fitnessLevel: 'Good',
         confidenceLevel: 'Confident',
         expectations: '',
-        timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       };
 
       setCelebrationType('registration');
